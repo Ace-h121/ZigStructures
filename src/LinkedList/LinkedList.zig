@@ -26,6 +26,16 @@ pub fn makeLinkedList(comptime T: type) type {
                     it = it.next orelse return it;
                 }
             }
+
+            pub fn findChildren(node: *Node) usize {
+                var it = node;
+                var i: usize = 0;
+                while (it.next != null) {
+                    it = it.next.?;
+                    i = i + 1;
+                }
+                return i;
+            }
         };
 
         first: ?*Node = null,
@@ -41,6 +51,29 @@ pub fn makeLinkedList(comptime T: type) type {
         pub fn prepend(list: *Self, headNode: *Node) void {
             headNode.next = list.first;
             list.first = headNode;
+        }
+
+        pub fn pop(list: *Self) ?*Node {
+            var poppedNode: ?*Node = null;
+            if (list.first == null) {
+                return null;
+            }
+
+            if (list.first.?.next == null) {
+                poppedNode = list.first;
+                list.first = null;
+                return poppedNode;
+            }
+
+            var prevNode: *Node = undefined;
+            poppedNode = list.first;
+            while (poppedNode.?.next != null) {
+                prevNode = poppedNode.?;
+                poppedNode = poppedNode.?.next;
+            }
+            prevNode.next = null;
+            list.first = prevNode;
+            return poppedNode;
         }
     };
 }
@@ -77,4 +110,35 @@ test "lastNode" {
     headNode.insertNode(&newNode);
     try expect(list.getFirstNode().?.next == &newNode);
     try expect(headNode.findLast() == &newNode);
+}
+
+test "countNode" {
+    const L = makeLinkedList(u32);
+    var list = L{};
+    var headNode = L.Node{ .data = 1 };
+    var newNode = L.Node{ .data = 2 };
+    var newestNode = L.Node{ .data = 3 };
+    list.prepend(&headNode);
+    headNode.insertNode(&newNode);
+    try expect(list.getFirstNode().?.next == &newNode);
+    try expect(headNode.findChildren() == 1);
+    newNode.insertNode(&newestNode);
+    try expect(headNode.findChildren() == 2);
+}
+
+test "popNode" {
+    const L = makeLinkedList(u32);
+    var list = L{};
+    var headNode = L.Node{ .data = 1 };
+    var newNode = L.Node{ .data = 2 };
+    var newestNode = L.Node{ .data = 3 };
+    list.prepend(&headNode);
+    headNode.insertNode(&newNode);
+    try expect(list.getFirstNode().?.next == &newNode);
+    try expect(headNode.findChildren() == 1);
+    newNode.insertNode(&newestNode);
+    try expect(headNode.findChildren() == 2);
+    const poppedNode = list.pop();
+    try expect(poppedNode.? == &newestNode);
+    try expect(headNode.findChildren() == 1);
 }

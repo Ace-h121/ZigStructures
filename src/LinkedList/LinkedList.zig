@@ -75,6 +75,30 @@ pub fn makeLinkedList(comptime T: type) type {
             list.first = prevNode;
             return poppedNode;
         }
+
+        pub fn len(list: *Self) usize {
+            if (list.first) |n| {
+                return 1 + n.findChildren();
+            } else {
+                return 0;
+            }
+        }
+
+        pub fn removeNode(list: *Self, node: *Node) *Node {
+            if (list.first == node) {
+                const tempNode = list.first.?;
+                list.first = node.next;
+                return tempNode;
+            } else {
+                var currentNode = list.first.?;
+                while (currentNode.next != node) {
+                    currentNode = currentNode.next.?;
+                }
+                const oldNode = currentNode.next.?;
+                currentNode.next = node.next;
+                return oldNode;
+            }
+        }
     };
 }
 
@@ -88,7 +112,7 @@ test "insertNode" {
     try expect(list.getFirstNode().?.next == &newNode);
 }
 
-test "removeNode" {
+test "removeNext" {
     const L = makeLinkedList(u32);
     var list = L{};
     var headNode = L.Node{ .data = 1 };
@@ -141,4 +165,31 @@ test "popNode" {
     const poppedNode = list.pop();
     try expect(poppedNode.? == &newestNode);
     try expect(headNode.findChildren() == 1);
+}
+
+test "LenList" {
+    const L = makeLinkedList(u32);
+    var list = L{};
+    var headNode = L.Node{ .data = 1 };
+    var newNode = L.Node{ .data = 2 };
+    list.prepend(&headNode);
+    headNode.insertNode(&newNode);
+    try expect(list.getFirstNode().?.next == &newNode);
+    try expect(list.len() == 2);
+}
+
+test "removeNode" {
+    const L = makeLinkedList(u32);
+    var list = L{};
+    var headNode = L.Node{ .data = 1 };
+    var newNode = L.Node{ .data = 2 };
+    var newestNode = L.Node{ .data = 3 };
+    list.prepend(&headNode);
+    headNode.insertNode(&newNode);
+    try expect(list.getFirstNode().?.next == &newNode);
+    try expect(headNode.findChildren() == 1);
+    newNode.insertNode(&newestNode);
+    const removedNode = list.removeNode(&newestNode);
+    try expect(removedNode == &newestNode);
+    try expect(list.len() == 2);
 }

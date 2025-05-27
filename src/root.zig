@@ -2,6 +2,7 @@
 //! you are making an executable, the convention is to delete this file and
 //! start with main.zig instead.
 const std = @import("std");
+const LinkedList = @import("LinkedList/LinkedList.zig").makeLinkedList(u32);
 const testing = std.testing;
 
 pub export fn add(a: i32, b: i32) i32 {

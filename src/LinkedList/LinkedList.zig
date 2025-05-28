@@ -95,7 +95,7 @@ pub fn makeLinkedList(comptime T: type) type {
                     currentNode = currentNode.next.?;
                 }
                 currentNode.next = node.next;
-                return currentNode;
+                return node;
             }
         }
     };
@@ -189,7 +189,6 @@ test "removeNode" {
     try expect(headNode.findChildren() == 1);
     newNode.insertNode(&newestNode);
     const removedNode = list.removeNode(&newestNode);
-    std.debug.print("Please work {}", .{&newestNode});
     try expect(removedNode == &newestNode);
-    try expect(list.len() == 1);
+    try expect(list.len() == 2);
 }

@@ -6,7 +6,7 @@ pub fn makeDoublelyLinkedList(comptime T: type) type {
     return struct {
         const Self = @This();
 
-        pub const Node = struct {
+        const Node = struct {
             next: ?*Node = null,
             prev: ?*Node = null,
             data: T,
@@ -82,6 +82,17 @@ pub fn makeDoublelyLinkedList(comptime T: type) type {
             }
             head.next = list.head;
             list.head = head;
+        }
+
+        pub fn append(list: *Self, node: *Node) void {
+            if (list.head == null) {
+                list.head = node;
+            }
+            var tempNode = list.head.?;
+            while (tempNode.next != null) {
+                tempNode = tempNode.next.?;
+            }
+            tempNode.insertAhead(node);
         }
 
         pub fn len(list: *Self) usize {
@@ -202,4 +213,16 @@ test "RemoveNode" {
     try expect(list.removeNode(&newNode) == &newNode);
     try expect(headNode.next.? == &newestNode);
     try expect(newestNode.prev.? == &headNode);
+}
+
+test "Append" {
+    const L = makeDoublelyLinkedList(u32);
+    var headNode = L.Node{ .data = 1 };
+    var newNode = L.Node{ .data = 2 };
+    var newestNode = L.Node{ .data = 3 };
+    headNode.insertAhead(&newNode);
+    var list = L{ .head = &headNode };
+
+    list.append(&newestNode);
+    try expect(newNode.next.? == &newestNode);
 }

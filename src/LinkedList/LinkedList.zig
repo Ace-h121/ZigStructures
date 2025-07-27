@@ -40,10 +40,6 @@ pub fn makeLinkedList(comptime T: type) type {
 
         first: ?*Node = null,
 
-        pub fn setHeadNode(list: *Self, headNode: *Node) void {
-            list.first = headNode;
-        }
-
         pub fn getFirstNode(list: *Self) ?*Node {
             return list.first;
         }

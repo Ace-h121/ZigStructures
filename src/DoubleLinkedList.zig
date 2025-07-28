@@ -12,7 +12,7 @@ pub fn makeDoublelyLinkedList(comptime T: type) type {
             return node;
         }
 
-        const Node = struct {
+        pub const Node = struct {
             next: ?*Node = null,
             prev: ?*Node = null,
             data: T,
@@ -77,19 +77,32 @@ pub fn makeDoublelyLinkedList(comptime T: type) type {
         };
 
         head: ?*Node = null,
+        tail: ?*Node = null,
+
+        pub fn fixList(list: *Self) void {
+            if (list.head != null and list.tail == null) {
+                list.tail = list.head.?.findLast();
+            }
+            if (list.tail != null and list.head == null) {
+                list.head = list.tail.?.findFirst();
+            }
+        }
 
         pub fn getHeadNode(list: *Self) ?*Node {
             return list.head;
         }
 
+        pub fn getTailNode(list: *Self) ?*Node {
+            return list.tail;
+        }
+
         pub fn prepend(list: *Self, head: *Node) void {
             if (list.head == null) {
                 list.head = head;
+                list.tail = head;
                 return;
             }
-            if (list.head != null) {
-                list.head.?.prev = head;
-            }
+            list.head.?.prev = head;
             head.next = list.head;
             list.head = head;
         }
@@ -97,12 +110,11 @@ pub fn makeDoublelyLinkedList(comptime T: type) type {
         pub fn append(list: *Self, node: *Node) void {
             if (list.head == null) {
                 list.head = node;
+                list.tail = node;
+                return;
             }
-            var tempNode = list.head.?;
-            while (tempNode.next != null) {
-                tempNode = tempNode.next.?;
-            }
-            tempNode.insertAhead(node);
+            list.tail.?.insertAhead(node);
+            list.tail = node;
         }
 
         pub fn len(list: *Self) usize {
@@ -137,29 +149,39 @@ pub fn makeDoublelyLinkedList(comptime T: type) type {
             }
             return tempNode.removeNext();
         }
+
+        ///O(1)
         pub fn removeLast(list: *Self) ?*Node {
             if (list.head == null) {
                 return null;
             }
-            var temp = list.head.?.findLast();
-            temp = temp.prev.?;
-            return temp.removeNext();
+            if (list.head == list.tail) {
+                const temp = list.head;
+                list.head = null;
+                list.tail = null;
+                return temp;
+            }
+
+            const temp = list.tail.?;
+            list.tail = temp.prev.?;
+            return list.tail.?.removeNext();
         }
 
+        ///O(1)
         pub fn removeFirst(list: *Self) ?*Node {
             if (list.head == null) {
                 return null;
             }
-            if (list.head.?.next != null) {
-                list.head.?.next.?.prev = null;
-                const tempNode = list.head.?;
-                list.head = list.head.?.next;
-                return tempNode;
-            } else {
-                const tempNode = list.head.?;
+            if (list.head == list.tail) {
+                const temp = list.head;
                 list.head = null;
-                return tempNode;
+                list.tail = null;
+                return temp;
             }
+
+            const temp = list.head.?;
+            list.head = temp.next.?;
+            return list.head.?.removePrev();
         }
     };
 }
@@ -231,6 +253,7 @@ test "Prepend" {
     var newNode = L.Node{ .data = 2 };
     var list = L{ .head = &headNode };
     list.prepend(&newNode);
+    list.fixList();
     try expect(list.head.? == &newNode);
     try expect(list.head.?.next == &headNode);
 }
@@ -243,6 +266,7 @@ test "RemoveNode" {
     headNode.insertAhead(&newNode);
     newNode.insertAhead(&newestNode);
     var list = L{ .head = &headNode };
+    list.fixList();
 
     try expect(list.removeNode(&newNode) == &newNode);
     try expect(headNode.next.? == &newestNode);
@@ -255,7 +279,8 @@ test "Append" {
     var newNode = L.Node{ .data = 2 };
     var newestNode = L.Node{ .data = 3 };
     headNode.insertAhead(&newNode);
-    var list = L{ .head = &headNode };
+    var list = L{ .head = &headNode, .tail = &newNode };
+    list.fixList();
 
     list.append(&newestNode);
     try expect(newNode.next.? == &newestNode);
@@ -268,6 +293,7 @@ test "RemoveLast" {
     var newestNode = L.Node{ .data = 3 };
     headNode.insertAhead(&newNode);
     var list = L{ .head = &headNode };
+    list.fixList();
 
     list.append(&newestNode);
     try expect(list.removeLast().? == &newestNode);
@@ -281,6 +307,7 @@ test "RemoveFirst" {
     var newestNode = L.Node{ .data = 3 };
     headNode.insertAhead(&newNode);
     var list = L{ .head = &headNode };
+    list.fixList();
 
     list.append(&newestNode);
     try expect(list.removeFirst().? == &headNode);

@@ -7,7 +7,15 @@ const Tree = @import("Tree/Tree.zig").makeTree(u32);
 const expect = std.testing.expect;
 
 test "System Check" {
-    var allocator = std.heap.page_allocator;
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var allocator = gpa.allocator();
+    defer {
+        const deinit_status = gpa.deinit();
+        if (deinit_status == .leak) expect(false) catch @panic("TEST FAIL");
+    }
+    var arena = std.heap.ArenaAllocator.init(allocator);
+    defer arena.deinit();
+    allocator = arena.allocator();
 
     var memory = try allocator.create(LinkedList);
     const headNode = try allocator.create(LinkedList.Node);
@@ -16,7 +24,6 @@ test "System Check" {
     memory.prepend(headNode);
     memory.prepend(newNode);
     try expect(memory.getFirstNode().? == newNode);
-    allocator.destroy(memory);
 
     var tree = try allocator.create(Tree);
     const parentNode = tree.makeTreeNode(1);

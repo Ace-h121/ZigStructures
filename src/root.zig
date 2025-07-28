@@ -10,9 +10,12 @@ test "System Check" {
     var allocator = std.heap.page_allocator;
 
     var memory = try allocator.create(LinkedList);
-    var headNode = LinkedList.Node{ .data = 2 };
-    memory.prepend(&headNode);
-    try expect(memory.getFirstNode().? == &headNode);
+    const headNode = try allocator.create(LinkedList.Node);
+    const newNode = try LinkedList.makeNode(5, allocator);
+    newNode.* = LinkedList.Node{ .data = 2 };
+    memory.prepend(headNode);
+    memory.prepend(newNode);
+    try expect(memory.getFirstNode().? == newNode);
     allocator.destroy(memory);
 
     var tree = try allocator.create(Tree);

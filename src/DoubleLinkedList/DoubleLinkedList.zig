@@ -6,6 +6,12 @@ pub fn makeDoublelyLinkedList(comptime T: type) type {
     return struct {
         const Self = @This();
 
+        pub fn makeNode(data: T, allocator: std.mem.Allocator) !*Node {
+            const node = try allocator.create(Node);
+            node.* = Node{ .data = data };
+            return node;
+        }
+
         const Node = struct {
             next: ?*Node = null,
             prev: ?*Node = null,
@@ -127,6 +133,30 @@ pub fn makeDoublelyLinkedList(comptime T: type) type {
             }
             return tempNode.removeNext();
         }
+        pub fn removeLast(list: *Self) ?*Node {
+            if (list.head == null) {
+                return null;
+            }
+            var temp = list.head.?.findLast();
+            temp = temp.prev.?;
+            return temp.removeNext();
+        }
+
+        pub fn removeFirst(list: *Self) ?*Node {
+            if (list.head == null) {
+                return null;
+            }
+            if (list.head.?.next != null) {
+                list.head.?.next.?.prev = null;
+                const tempNode = list.head.?;
+                list.head = list.head.?.next;
+                return tempNode;
+            } else {
+                const tempNode = list.head.?;
+                list.head = null;
+                return tempNode;
+            }
+        }
     };
 }
 
@@ -225,4 +255,30 @@ test "Append" {
 
     list.append(&newestNode);
     try expect(newNode.next.? == &newestNode);
+}
+
+test "RemoveLast" {
+    const L = makeDoublelyLinkedList(u32);
+    var headNode = L.Node{ .data = 1 };
+    var newNode = L.Node{ .data = 2 };
+    var newestNode = L.Node{ .data = 3 };
+    headNode.insertAhead(&newNode);
+    var list = L{ .head = &headNode };
+
+    list.append(&newestNode);
+    try expect(list.removeLast().? == &newestNode);
+    try expect(newNode.next == null);
+}
+
+test "RemoveFirst" {
+    const L = makeDoublelyLinkedList(u32);
+    var headNode = L.Node{ .data = 1 };
+    var newNode = L.Node{ .data = 2 };
+    var newestNode = L.Node{ .data = 3 };
+    headNode.insertAhead(&newNode);
+    var list = L{ .head = &headNode };
+
+    list.append(&newestNode);
+    try expect(list.removeFirst().? == &headNode);
+    try expect(list.getHeadNode().? == &newNode);
 }

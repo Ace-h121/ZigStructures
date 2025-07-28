@@ -5,6 +5,12 @@ pub fn makeLinkedList(comptime T: type) type {
     return struct {
         const Self = @This();
 
+        pub fn makeNode(data: T, allocator: std.mem.Allocator) !*Node {
+            const node = try allocator.create(Node);
+            node.* = Node{ .data = data };
+            return node;
+        }
+
         pub const Node = struct {
             next: ?*Node = null,
             data: T,
@@ -39,6 +45,10 @@ pub fn makeLinkedList(comptime T: type) type {
         };
 
         first: ?*Node = null,
+
+        pub fn setHeadNode(list: *Self, headNode: *Node) void {
+            list.first = headNode;
+        }
 
         pub fn getFirstNode(list: *Self) ?*Node {
             return list.first;

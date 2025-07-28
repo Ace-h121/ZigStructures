@@ -2,8 +2,9 @@
 //! you are making an executable, the convention is to delete this file and
 //! start with main.zig instead.
 const std = @import("std");
-const LinkedList = @import("LinkedList/LinkedList.zig").makeLinkedList(u32);
+const LinkedList = @import("LinkedList.zig").makeLinkedList(u32);
 const Tree = @import("Tree/Tree.zig").makeTree(u32);
+const DoubleLinkedList = @import("DoubleLinkedList.zig").makeDoublelyLinkedList(u32);
 const expect = std.testing.expect;
 
 test "System Check" {
@@ -18,6 +19,7 @@ test "System Check" {
     allocator = arena.allocator();
 
     var memory = try allocator.create(LinkedList);
+    memory.* = LinkedList{};
     const headNode = try allocator.create(LinkedList.Node);
     const newNode = try LinkedList.makeNode(5, allocator);
     newNode.* = LinkedList.Node{ .data = 2 };
@@ -30,4 +32,13 @@ test "System Check" {
     parentNode.*.left = tree.makeTreeNode(2);
     try expect(parentNode.*.left.?.data == 2);
     allocator.destroy(tree);
+
+    var doubleList = try allocator.create(DoubleLinkedList);
+    doubleList.* = DoubleLinkedList{};
+    const newHeadNode = try DoubleLinkedList.makeNode(5, allocator);
+    doubleList.prepend(newHeadNode);
+    try expect(doubleList.getHeadNode().? == newHeadNode);
+    const newNewNode = try DoubleLinkedList.makeNode(2, allocator);
+    doubleList.prepend(newNewNode);
+    try expect(doubleList.getHeadNode().?.next.? == newHeadNode);
 }

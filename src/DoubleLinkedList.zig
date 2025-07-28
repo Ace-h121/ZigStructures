@@ -83,6 +83,10 @@ pub fn makeDoublelyLinkedList(comptime T: type) type {
         }
 
         pub fn prepend(list: *Self, head: *Node) void {
+            if (list.head == null) {
+                list.head = head;
+                return;
+            }
             if (list.head != null) {
                 list.head.?.prev = head;
             }
